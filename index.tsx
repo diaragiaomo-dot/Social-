@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
   Instagram, 
@@ -18,7 +18,14 @@ import {
   Activity,
   Target,
   TrendingUp,
-  Layers
+  Layers,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  Phone,
+  ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
@@ -35,11 +42,10 @@ const CONFIG = {
 };
 
 const NAV_ITEMS = [
-  { label: 'Introduzione', href: '#introduzione' },
+  { label: 'Introduzione', href: '#hero' },
   { label: 'Servizi', href: '#servizi' },
-  { label: 'I miei ultimi lavori', href: '#portfolio' },
-  { label: 'Collabora con me', href: '#contatti' },
-  { label: 'Scrivimi un email', href: `mailto:${CONFIG.email}` },
+  { label: 'Portfolio', href: '#portfolio' },
+  { label: 'Prenota', href: '#prenota' },
 ];
 
 const SERVICES = [
@@ -73,14 +79,19 @@ const PORTFOLIO = [
   { id: 4, title: "Short Form Video", category: "Video Editing", tech: "CapCut" }
 ];
 
+const TIME_SLOTS = [
+  "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"
+];
+
 const GIACOMO_CONTEXT = `
 Sei il "Gemello Digitale" di Giacomo Diara. Giacomo è un esperto in SMM, Web Design e Video Editing.
 PERSONALITÀ: Professionale, sintetico, energico, cordiale.
 LINGUA: Italiano.
 OBIETTIVO: Rispondere a domande sui servizi di Giacomo, fissare contatti via email (${CONFIG.email}) e mostrare competenza digitale.
+Se l'utente vuole prenotare una chiamata, digli di scorrere fino alla sezione "Prenota" o mandare una mail.
 `;
 
-// --- Helpers ---
+// --- Helpers for Audio & AI ---
 const encode = (bytes: Uint8Array) => {
   let binary = '';
   for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
@@ -128,7 +139,121 @@ const SectionHeading = ({ subtitle, title, centered = false }: { subtitle: strin
   </div>
 );
 
-const Navbar = ({ onToggleAI, aiActive, isLive }: any) => {
+const BookingCalendar = () => {
+  const [selectedDate, setSelectedDate] = useState<number | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [currentMonth] = useState(new Date().getMonth());
+  const [currentYear] = useState(new Date().getFullYear());
+  const [isBooked, setIsBooked] = useState(false);
+
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const monthName = new Intl.DateTimeFormat('it-IT', { month: 'long' }).format(new Date(currentYear, currentMonth));
+
+  const handleBooking = () => {
+    if (selectedDate && selectedTime) {
+      setIsBooked(true);
+      setTimeout(() => setIsBooked(false), 5000);
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white border border-zinc-100 p-8 rounded-3xl shadow-xl">
+      <div>
+        <div className="flex items-center justify-between mb-8">
+          <h3 className="text-2xl font-black uppercase italic tracking-tighter">
+            {monthName} {currentYear}
+          </h3>
+          <div className="flex gap-2">
+            <button className="p-2 border border-zinc-100 rounded-full hover:bg-zinc-50 transition-colors"><ChevronLeft size={20} /></button>
+            <button className="p-2 border border-zinc-100 rounded-full hover:bg-zinc-50 transition-colors"><ChevronRight size={20} /></button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-7 gap-2 text-center mb-4">
+          {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map(d => (
+            <span key={d} className="text-[10px] font-bold text-zinc-400 uppercase">{d}</span>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-2">
+          {Array(firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1).fill(null).map((_, i) => (
+            <div key={`empty-${i}`} className="h-12" />
+          ))}
+          {days.map(day => {
+            const isSelected = selectedDate === day;
+            const isToday = new Date().getDate() === day;
+            return (
+              <button
+                key={day}
+                onClick={() => setSelectedDate(day)}
+                className={`h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all
+                  ${isSelected ? 'bg-electric-blue text-white scale-110 shadow-lg' : 'hover:bg-zinc-100 text-zinc-800'}
+                  ${isToday && !isSelected ? 'border border-electric-blue text-electric-blue' : ''}
+                `}
+              >
+                {day}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-zinc-100 pt-8 lg:pt-0 lg:pl-12">
+        <div>
+          <h4 className="text-sm font-black uppercase tracking-widest text-zinc-400 mb-6 flex items-center gap-2">
+            <Clock size={16} /> Slot Disponibili
+          </h4>
+          <div className="grid grid-cols-2 gap-3">
+            {TIME_SLOTS.map(slot => (
+              <button
+                key={slot}
+                onClick={() => setSelectedTime(slot)}
+                className={`py-3 px-4 rounded-xl border text-sm font-bold transition-all
+                  ${selectedTime === slot ? 'bg-zinc-900 border-zinc-900 text-white' : 'border-zinc-100 text-zinc-600 hover:border-zinc-300'}
+                `}
+              >
+                {slot}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-12">
+          <AnimatePresence mode="wait">
+            {isBooked ? (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="bg-green-50 text-green-600 p-4 rounded-xl flex items-center gap-3 border border-green-100"
+              >
+                <CheckCircle2 size={20} />
+                <span className="font-bold">Richiesta inviata con successo!</span>
+              </motion.div>
+            ) : (
+              <button
+                disabled={!selectedDate || !selectedTime}
+                onClick={handleBooking}
+                className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all
+                  ${selectedDate && selectedTime 
+                    ? 'bg-electric-blue text-white hover:scale-[1.02] shadow-xl' 
+                    : 'bg-zinc-100 text-zinc-400 cursor-not-allowed'}
+                `}
+              >
+                Conferma Prenotazione
+                <ArrowRight size={20} />
+              </button>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Navbar = ({ onToggleAI, aiActive }: { onToggleAI: () => void, aiActive: boolean }) => {
   const [scrolled, setScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -139,31 +264,26 @@ const Navbar = ({ onToggleAI, aiActive, isLive }: any) => {
   }, []);
 
   return (
-    <nav className={`fixed top-0 w-full z-[100] transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-md py-4 shadow-sm border-b border-zinc-100' : 'bg-transparent py-8'}`}>
-      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-        <a href="#top" className="text-xl font-black tracking-tighter flex items-center gap-2 group">
-          <div className="w-8 h-8 bg-zinc-950 text-white rounded-lg flex items-center justify-center text-xs font-bold group-hover:bg-electric-blue transition-colors">GD</div>
-          <span>GIACOMO<span className="text-electric-blue">DIARA</span></span>
+    <nav className={`fixed top-0 w-full z-[100] transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-md py-4 shadow-sm' : 'py-8'}`}>
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+        <a href="#" className="text-2xl font-black italic tracking-tighter uppercase">
+          GD<span className="text-electric-blue">.</span>
         </a>
 
-        <div className="hidden md:flex items-center gap-10">
-          <div className="flex gap-8 text-[10px] font-black uppercase tracking-widest text-zinc-400">
-            {NAV_ITEMS.map((item) => (
-              <a 
-                key={item.label} 
-                href={item.href} 
-                className="hover:text-electric-blue transition-colors whitespace-nowrap"
-              >
-                {item.label}
-              </a>
-            ))}
-          </div>
+        <div className="hidden md:flex items-center gap-12">
+          {NAV_ITEMS.map(item => (
+            <a key={item.label} href={item.href} className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-electric-blue transition-colors">
+              {item.label}
+            </a>
+          ))}
           <button 
             onClick={onToggleAI}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${aiActive ? 'bg-electric-blue text-white shadow-lg shadow-blue-500/30' : 'bg-zinc-100 text-zinc-900 hover:bg-zinc-200'}`}
+            className={`flex items-center gap-2 px-6 py-2 rounded-full border-2 transition-all font-black text-[11px] uppercase tracking-widest
+              ${aiActive ? 'bg-electric-blue border-electric-blue text-white animate-pulse' : 'border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white'}
+            `}
           >
-            <Sparkles size={14} className={isLive ? 'animate-pulse' : ''} />
-            AI Twin
+            {aiActive ? <Zap size={14} fill="currentColor" /> : <Sparkles size={14} />}
+            Digital Twin
           </button>
         </div>
 
@@ -171,16 +291,27 @@ const Navbar = ({ onToggleAI, aiActive, isLive }: any) => {
           {isOpen ? <X /> : <Menu />}
         </button>
       </div>
-      
+
       <AnimatePresence>
         {isOpen && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="md:hidden bg-white border-b border-zinc-100 overflow-hidden">
-            <div className="px-6 py-10 flex flex-col gap-6 text-[11px] font-black uppercase tracking-widest">
-              {NAV_ITEMS.map((item) => (
-                <a key={item.label} href={item.href} onClick={() => setIsOpen(false)}>{item.label}</a>
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-white border-b border-zinc-100 px-6 py-8"
+          >
+            <div className="flex flex-col gap-6">
+              {NAV_ITEMS.map(item => (
+                <a key={item.label} href={item.href} onClick={() => setIsOpen(false)} className="text-xl font-black uppercase italic tracking-tighter">
+                  {item.label}
+                </a>
               ))}
-              <button onClick={() => { onToggleAI(); setIsOpen(false); }} className="text-electric-blue flex items-center gap-2 font-black uppercase tracking-widest text-[11px]">
-                <Sparkles size={14}/> AI Assistant
+              <button 
+                onClick={() => { onToggleAI(); setIsOpen(false); }}
+                className="w-full py-4 bg-zinc-900 text-white font-black uppercase tracking-widest flex items-center justify-center gap-2"
+              >
+                <Sparkles size={18} />
+                Digital Twin
               </button>
             </div>
           </motion.div>
@@ -190,225 +321,221 @@ const Navbar = ({ onToggleAI, aiActive, isLive }: any) => {
   );
 };
 
-const AIAgent = ({ isOpen, onToggle, isLive, setIsLive }: any) => {
-  const [history, setHistory] = useState<any[]>([]);
-  const [status, setStatus] = useState<'idle' | 'listening' | 'speaking'>('idle');
-  const sessionRef = useRef<any>(null);
-  const statusRef = useRef(status);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => { statusRef.current = status; }, [status]);
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [history, status]);
+const DigitalTwinOverlay = ({ isActive, onClose }: { isActive: boolean, onClose: () => void }) => {
+  const [isLive, setIsLive] = useState(false);
+  const [transcription, setTranscription] = useState("");
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const nextStartTimeRef = useRef(0);
+  const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
+  const streamRef = useRef<MediaStream | null>(null);
 
   const startSession = async () => {
-    if (sessionRef.current) return;
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const outCtx = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
-      const inCtx = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 16000});
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+      const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
       
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
       const sessionPromise = ai.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-12-2025',
         callbacks: {
           onopen: () => {
             setIsLive(true);
-            const source = inCtx.createMediaStreamSource(stream);
-            const proc = inCtx.createScriptProcessor(4096, 1, 1);
-            proc.onaudioprocess = (e) => {
-              if (statusRef.current !== 'listening') return;
-              const inputData = e.inputBuffer.getChannelData(0);
-              const int16 = new Int16Array(inputData.length);
-              for (let i = 0; i < inputData.length; i++) int16[i] = inputData[i] * 32768;
-              sessionPromise.then(s => s.sendRealtimeInput({ media: { data: encode(new Uint8Array(int16.buffer)), mimeType: 'audio/pcm;rate=16000' } }));
+            const source = inputCtx.createMediaStreamSource(stream);
+            const processor = inputCtx.createScriptProcessor(4096, 1, 1);
+            processor.onaudioprocess = (e) => {
+              const input = e.inputBuffer.getChannelData(0);
+              const int16 = new Int16Array(input.length);
+              for (let i = 0; i < input.length; i++) int16[i] = input[i] * 32768;
+              sessionPromise.then(s => s.sendRealtimeInput({ 
+                media: { data: encode(new Uint8Array(int16.buffer)), mimeType: 'audio/pcm;rate=16000' } 
+              }));
             };
-            source.connect(proc);
-            proc.connect(inCtx.destination);
+            source.connect(processor);
+            processor.connect(inputCtx.destination);
           },
           onmessage: async (msg: LiveServerMessage) => {
             if (msg.serverContent?.outputTranscription) {
-              setHistory(prev => {
-                const last = prev[prev.length-1];
-                if (last?.role === 'model') return [...prev.slice(0, -1), { ...last, text: last.text + msg.serverContent!.outputTranscription!.text }];
-                return [...prev, { role: 'model', text: msg.serverContent!.outputTranscription!.text }];
-              });
+              setTranscription(prev => (prev + " " + msg.serverContent?.outputTranscription?.text).trim());
             }
-            const audioData = msg.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-            if (audioData) {
-              setStatus('speaking');
-              const buffer = await decodeAudioData(decode(audioData), outCtx, 24000, 1);
-              const source = outCtx.createBufferSource();
+            const audioBase64 = msg.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+            if (audioBase64 && audioContextRef.current) {
+              const buffer = await decodeAudioData(decode(audioBase64), audioContextRef.current, 24000, 1);
+              const source = audioContextRef.current.createBufferSource();
               source.buffer = buffer;
-              source.connect(outCtx.destination);
-              source.onended = () => setStatus('idle');
-              source.start();
+              source.connect(audioContextRef.current.destination);
+              nextStartTimeRef.current = Math.max(nextStartTimeRef.current, audioContextRef.current.currentTime);
+              source.start(nextStartTimeRef.current);
+              nextStartTimeRef.current += buffer.duration;
+              sourcesRef.current.add(source);
+              source.onended = () => sourcesRef.current.delete(source);
+            }
+            if (msg.serverContent?.interrupted) {
+              sourcesRef.current.forEach(s => s.stop());
+              sourcesRef.current.clear();
+              nextStartTimeRef.current = 0;
             }
           },
-          onclose: () => { setIsLive(false); sessionRef.current = null; setStatus('idle'); },
-          onerror: () => { setIsLive(false); setStatus('idle'); }
+          onclose: () => setIsLive(false),
+          onerror: (e) => console.error("Live Error", e),
         },
         config: {
           responseModalities: [Modality.AUDIO],
           systemInstruction: GIACOMO_CONTEXT,
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
           outputAudioTranscription: {}
         }
       });
-      sessionRef.current = await sessionPromise;
-    } catch (e) { console.error(e); }
-  };
-
-  const handleToggleMic = () => {
-    if (!isLive) {
-      startSession();
-      setStatus('listening');
-    } else {
-      setStatus(prev => prev === 'listening' ? 'idle' : 'listening');
+    } catch (err) {
+      console.error(err);
     }
   };
 
+  useEffect(() => {
+    if (isActive && !isLive) startSession();
+    return () => {
+      streamRef.current?.getTracks().forEach(t => t.stop());
+      sourcesRef.current.forEach(s => s.stop());
+    };
+  }, [isActive]);
+
   return (
-    <div className="fixed bottom-8 left-8 z-[150]">
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="absolute bottom-20 left-0 w-[350px] bg-white rounded-[32px] shadow-2xl border border-zinc-100 overflow-hidden flex flex-col">
-            <div className="bg-zinc-950 p-6 text-white flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-zinc-500'}`} />
-                <span className="text-[10px] font-black uppercase tracking-widest">Live Digital Twin</span>
+    <AnimatePresence>
+      {isActive && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[200] bg-zinc-900/95 backdrop-blur-xl flex flex-col items-center justify-center p-6"
+        >
+          <button onClick={onClose} className="absolute top-10 right-10 text-white/50 hover:text-white transition-colors">
+            <X size={32} />
+          </button>
+
+          <div className="w-full max-w-xl text-center">
+            <div className="relative mb-12">
+              <div className="w-32 h-32 rounded-full bg-electric-blue/20 mx-auto flex items-center justify-center relative">
+                <motion.div 
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="absolute inset-0 rounded-full border-2 border-electric-blue/50"
+                />
+                <Sparkles className="text-electric-blue" size={48} />
               </div>
-              <button onClick={onToggle} className="text-zinc-500 hover:text-white"><X size={18} /></button>
             </div>
-            <div className="h-[300px] overflow-y-auto p-6 space-y-4 bg-zinc-50/50 custom-scrollbar">
-              {history.length === 0 && <p className="text-zinc-400 text-xs italic text-center py-10">Inizia a parlare per attivare il gemello digitale...</p>}
-              {history.map((h, i) => (
-                <div key={i} className={`flex ${h.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] p-3 rounded-2xl text-[12px] ${h.role === 'user' ? 'bg-zinc-900 text-white' : 'bg-white border border-zinc-100 text-zinc-700'}`}>
-                    {h.text}
-                  </div>
-                </div>
-              ))}
-              <div ref={chatEndRef} />
+
+            <h2 className="text-4xl md:text-5xl font-black italic uppercase text-white mb-4 tracking-tighter">
+              Digital Twin <span className="text-electric-blue">Giacomo</span>
+            </h2>
+            <p className="text-zinc-400 font-medium mb-12 uppercase tracking-widest text-[11px]">
+              {isLive ? "In ascolto... Parla ora." : "Connessione in corso..."}
+            </p>
+
+            <div className="bg-white/5 border border-white/10 p-8 rounded-3xl mb-8 min-h-[120px] flex items-center justify-center">
+              <p className="text-zinc-200 text-lg leading-relaxed italic">
+                {transcription || "Ciao! Sono la versione digitale di Giacomo. Come posso aiutarti oggi?"}
+              </p>
             </div>
-            <div className="p-6 border-t border-zinc-100">
-              <button 
-                onClick={handleToggleMic}
-                className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest transition-all ${status === 'listening' ? 'bg-red-500 text-white animate-pulse' : 'bg-zinc-950 text-white hover:bg-electric-blue'}`}
-              >
-                {status === 'listening' ? <MicOff size={16} /> : <Mic size={16} />}
-                {status === 'listening' ? 'Stop' : isLive ? 'Parla ora' : 'Attiva AI'}
-              </button>
+
+            <div className="flex gap-4 justify-center">
+              <div className="p-4 bg-white/5 rounded-full text-zinc-400">
+                <Mic size={20} />
+              </div>
+              <div className="px-6 py-4 bg-electric-blue text-white rounded-full font-black uppercase text-[10px] tracking-widest flex items-center gap-2">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                Live Audio Session
+              </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <button onClick={onToggle} className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-all group ${isOpen ? 'bg-zinc-950 text-white rotate-90' : 'bg-electric-blue text-white hover:scale-105'}`}>
-        {isOpen ? <X size={24} /> : <Sparkles size={24} className="group-hover:rotate-12 transition-transform" />}
-      </button>
-    </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
 const App = () => {
-  const [isAIOpen, setIsAIOpen] = useState(false);
-  const [isLive, setIsLive] = useState(false);
+  const [aiActive, setAiActive] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white text-zinc-900 font-inter overflow-x-hidden">
-      <Navbar onToggleAI={() => setIsAIOpen(!isAIOpen)} aiActive={isAIOpen} isLive={isLive} />
-      <AIAgent isOpen={isAIOpen} onToggle={() => setIsAIOpen(!isAIOpen)} isLive={isLive} setIsLive={setIsLive} />
+    <div className="min-h-screen bg-white">
+      <Navbar onToggleAI={() => setAiActive(true)} aiActive={aiActive} />
+      <DigitalTwinOverlay isActive={aiActive} onClose={() => setAiActive(false)} />
 
-      {/* Hero Section */}
-      <section id="top" className="min-h-screen flex flex-col justify-center items-center text-center px-6 pt-20 relative">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl aspect-square bg-blue-50/30 blur-[150px] rounded-full -z-10" />
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-          <span className="text-electric-blue text-[10px] font-black uppercase tracking-[0.5em] mb-6 block italic">Junior Digital Strategist</span>
-          <h1 className="text-6xl md:text-[9rem] font-black tracking-tighter leading-[0.8] mb-12 italic uppercase">
-            Scolpire la <br /> <span className="gradient-text">Presenza</span> Digitale
-          </h1>
-          <p className="text-zinc-500 text-xl md:text-2xl max-w-2xl mx-auto mb-16 leading-relaxed font-medium italic">
-            "Semplifico la complessità del web con strategie social audaci e design funzionale."
-          </p>
-          <div className="flex flex-wrap justify-center gap-6">
-            <a href="#portfolio" className="bg-zinc-950 text-white px-12 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-electric-blue transition-all shadow-xl shadow-zinc-950/10">Portfolio</a>
-            <a href="#contatti" className="bg-white border-2 border-zinc-100 px-12 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-electric-blue transition-all">Contatti</a>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Description Section (Manifesto) */}
-      <section id="introduzione" className="py-32 px-6 bg-white scroll-mt-24">
-        <div className="max-w-4xl mx-auto">
-          <SectionHeading subtitle="Manifesto Digitale" title="Visione & Metodo" />
-          <div className="space-y-8 text-lg md:text-xl text-zinc-600 leading-relaxed font-medium italic">
-            <p>
-              Sono <strong className="text-zinc-900 font-black not-italic">Giacomo Diara</strong>, Social Media Manager Junior specializzato nel supportare professionisti e piccole imprese che desiderano trasformare la propria presenza online in uno strumento concreto di crescita.
-            </p>
-            <p>
-              Credo che essere sui social non significhi semplicemente “esserci”, ma comunicare con intenzione, metodo e obiettivi chiari. Per questo progetto strategie personalizzate che aiutano i brand ad aumentare la propria visibilità, intercettare il pubblico giusto e costruire un posizionamento autorevole nel tempo.
-            </p>
-            <p>
-              Ogni contenuto nasce da un’analisi strategica: nulla è lasciato al caso. L’obiettivo non è pubblicare di più, ma comunicare meglio — con coerenza, valore e direzione.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 mt-20">
-            {[
-              { icon: <Target className="text-electric-blue" />, label: "Strategia", desc: "Analisi mirata per obiettivi chiari." },
-              { icon: <Layers className="text-electric-blue" />, label: "Posizionamento", desc: "Costruire autorevolezza nel tempo." },
-              { icon: <TrendingUp className="text-electric-blue" />, label: "Crescita", desc: "Risultati misurabili e costanti." }
-            ].map((pillar, i) => (
-              <motion.div 
-                key={i} 
-                initial={{ opacity: 0, y: 20 }} 
-                whileInView={{ opacity: 1, y: 0 }} 
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="p-8 bg-zinc-50 rounded-3xl border border-zinc-100 group hover:border-electric-blue transition-all"
-              >
-                <div className="mb-4">{pillar.icon}</div>
-                <h4 className="text-xl font-black italic uppercase tracking-tight mb-2">{pillar.label}</h4>
-                <p className="text-sm text-zinc-500 leading-relaxed">{pillar.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="mt-20 space-y-8 text-lg md:text-xl text-zinc-600 leading-relaxed font-medium italic">
-            <p>
-              Affianco i miei clienti in un percorso strutturato, orientato a trasformare l’audience in opportunità concrete di business.
-            </p>
-            <div className="p-10 bg-zinc-950 text-white rounded-[40px] shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-electric-blue/10 blur-3xl rounded-full" />
-              <p className="relative z-10 text-2xl md:text-3xl font-black uppercase tracking-tighter leading-tight italic">
-                "Perché i social media, se utilizzati correttamente, <br />
-                <span className="text-electric-blue">non sono un costo: sono un investimento.</span>"
+      {/* Hero */}
+      <section id="hero" className="relative pt-40 pb-20 md:pt-60 md:pb-40 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-12 gap-12 items-center">
+          <div className="md:col-span-8">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <span className="text-electric-blue text-[11px] font-black uppercase tracking-[0.4em] mb-6 block">
+                Digital Strategy & Content Design
+              </span>
+              <h1 className="text-6xl md:text-9xl font-black italic tracking-tighter uppercase leading-[0.85] mb-8">
+                Creatività <br />
+                <span className="text-electric-blue">Digitale</span> <br />
+                Senza Compromessi
+              </h1>
+              <p className="text-xl md:text-2xl text-zinc-500 max-w-xl font-medium leading-relaxed mb-10">
+                Trasformo idee in ecosistemi digitali performanti. Social Media, Web Design e Video Editing con un unico obiettivo: la conversione.
               </p>
-            </div>
+              <div className="flex flex-wrap gap-4">
+                <a href="#prenota" className="px-10 py-5 bg-zinc-900 text-white font-black uppercase tracking-widest text-[11px] hover:bg-electric-blue transition-all">
+                  Iniziamo un Progetto
+                </a>
+                <button onClick={() => setAiActive(true)} className="px-10 py-5 border-2 border-zinc-900 font-black uppercase tracking-widest text-[11px] flex items-center gap-2 hover:bg-zinc-50 transition-all">
+                  Parla con il Twin
+                </button>
+              </div>
+            </motion.div>
+          </div>
+          <div className="hidden md:block md:col-span-4 relative">
+             <motion.div 
+               animate={{ rotate: [0, 5, 0] }}
+               transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
+               className="aspect-[4/5] bg-zinc-100 border border-zinc-200 rounded-3xl overflow-hidden relative"
+             >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                <div className="absolute bottom-10 left-10 text-white">
+                  <div className="font-black italic uppercase tracking-tighter text-4xl">GD.</div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest opacity-80">Giacomo Diara</div>
+                </div>
+                {/* Placeholder image representation */}
+                <div className="w-full h-full flex items-center justify-center bg-zinc-50">
+                   <User size={120} className="text-zinc-200" />
+                </div>
+             </motion.div>
+             <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-electric-blue rounded-full blur-[100px] opacity-20" />
           </div>
         </div>
       </section>
 
-      {/* Services Section */}
-      <section id="servizi" className="py-32 px-6 bg-zinc-50/50 scroll-mt-24">
-        <div className="max-w-7xl mx-auto">
-          <SectionHeading subtitle="Expertise" title="Cosa posso fare per te" centered />
-          <div className="grid md:grid-cols-3 gap-10">
-            {SERVICES.map((s, i) => (
+      {/* Services */}
+      <section id="servizi" className="py-32 bg-zinc-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <SectionHeading subtitle="Expertise" title="Cosa posso fare per te" />
+          <div className="grid md:grid-cols-3 gap-8">
+            {SERVICES.map((s, idx) => (
               <motion.div 
                 key={s.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
                 viewport={{ once: true }}
-                className="bg-white p-10 rounded-[40px] border border-zinc-100 shadow-sm hover:shadow-xl transition-all group"
+                transition={{ delay: idx * 0.1 }}
+                className="bg-white p-10 rounded-3xl border border-zinc-100 hover:shadow-2xl transition-all group"
               >
-                <div className="w-14 h-14 bg-zinc-50 text-electric-blue rounded-2xl flex items-center justify-center mb-8 group-hover:bg-electric-blue group-hover:text-white transition-all">
+                <div className="w-16 h-16 rounded-2xl bg-zinc-50 flex items-center justify-center mb-8 group-hover:bg-electric-blue group-hover:text-white transition-colors">
                   {s.icon}
                 </div>
-                <h3 className="text-2xl font-black italic uppercase tracking-tight mb-4">{s.title}</h3>
-                <p className="text-zinc-500 mb-8 leading-relaxed">{s.desc}</p>
+                <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-4">{s.title}</h3>
+                <p className="text-zinc-500 font-medium mb-8 leading-relaxed">{s.desc}</p>
                 <div className="flex flex-wrap gap-2">
                   {s.tags.map(tag => (
-                    <span key={tag} className="text-[8px] font-black uppercase tracking-widest text-zinc-400 bg-zinc-50 px-3 py-1.5 rounded-full">{tag}</span>
+                    <span key={tag} className="text-[9px] font-black uppercase tracking-widest px-3 py-1 bg-zinc-100 rounded-full text-zinc-400">{tag}</span>
                   ))}
                 </div>
               </motion.div>
@@ -417,112 +544,99 @@ const App = () => {
         </div>
       </section>
 
-      {/* About Section */}
-      <section id="chi-sono" className="py-32 px-6 bg-white scroll-mt-24">
-        <div className="max-w-3xl mx-auto text-center">
-          <SectionHeading subtitle="About" title="Giacomo Diara" centered />
-          <div className="space-y-10 text-xl md:text-2xl text-zinc-600 leading-relaxed font-medium">
-            <p>Sono un creativo digitale che crede nel potere della narrazione visiva unita alla precisione tecnica.</p>
-            <p>Essere <strong className="text-zinc-950">"Junior"</strong> non è un limite, ma una licenza per innovare, testare nuovi trend e utilizzare tool all'avanguardia prima degli altri.</p>
-            <div className="pt-10 flex justify-center gap-12">
-               <div className="text-center">
-                 <div className="text-5xl font-black text-electric-blue italic mb-1">100%</div>
-                 <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Passione</div>
-               </div>
-               <div className="w-px h-16 bg-zinc-100 hidden md:block" />
-               <div className="text-center">
-                 <div className="text-5xl font-black text-electric-blue italic mb-1">7/24</div>
-                 <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Curiosità</div>
-               </div>
-            </div>
+      {/* Portfolio */}
+      <section id="portfolio" className="py-32">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-20">
+            <SectionHeading subtitle="Work" title="Progetti Selezionati" />
+            <a href="#" className="mb-16 font-black uppercase tracking-widest text-[10px] text-zinc-400 hover:text-electric-blue transition-colors flex items-center gap-2">
+              Vedi Tutto <ArrowRight size={14} />
+            </a>
           </div>
-        </div>
-      </section>
-
-      {/* Portfolio Section */}
-      <section id="portfolio" className="py-32 px-6 bg-zinc-950 text-white rounded-t-[60px] md:rounded-t-[100px] scroll-mt-24">
-        <div className="max-w-7xl mx-auto">
-          <SectionHeading subtitle="Showcase" title="Archivio Lavori" />
-          <div className="grid md:grid-cols-2 gap-8">
-            {PORTFOLIO.map((item, i) => (
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {PORTFOLIO.map(item => (
               <motion.div 
                 key={item.id}
-                whileHover={{ scale: 0.98 }}
-                className="bg-zinc-900 aspect-video rounded-[40px] p-12 flex flex-col justify-end border border-zinc-800 hover:border-electric-blue transition-all cursor-pointer relative group overflow-hidden"
+                whileHover={{ y: -10 }}
+                className="aspect-square bg-zinc-100 rounded-3xl p-8 flex flex-col justify-end border border-zinc-200 group relative overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-electric-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <span className="text-electric-blue text-[10px] font-black uppercase tracking-widest mb-4">{item.category}</span>
-                <h3 className="text-4xl font-black italic uppercase mb-2 group-hover:text-electric-blue transition-colors">{item.title}</h3>
-                <p className="text-zinc-500 font-bold text-sm">Tech: {item.tech}</p>
+                <div className="absolute top-8 right-8 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                   <ArrowRight size={18} />
+                </div>
+                <div className="relative z-10">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-electric-blue mb-2 block">{item.category}</span>
+                  <h4 className="text-xl font-black uppercase italic tracking-tighter mb-2">{item.title}</h4>
+                  <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">{item.tech}</span>
+                </div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Contacts Section */}
-      <section id="contatti" className="py-32 px-6 bg-white scroll-mt-24">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-20">
-          <div>
-            <SectionHeading subtitle="Contact" title="Iniziamo Qualcosa" />
-            <p className="text-zinc-500 text-xl italic mb-12">"Il futuro del tuo brand merita una visione fresca e digitale. Parliamone ora."</p>
-            <div className="space-y-6">
-              <a href={`mailto:${CONFIG.email}`} className="flex items-center gap-6 p-8 bg-zinc-50 rounded-[32px] hover:bg-blue-50 transition-colors group">
-                <Mail className="text-electric-blue group-hover:scale-110 transition-transform" size={32} />
-                <div>
-                  <div className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Diretto</div>
-                  <div className="text-xl font-bold">{CONFIG.email}</div>
+      {/* Booking */}
+      <section id="prenota" className="py-32 bg-zinc-900 text-white overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-electric-blue rounded-full blur-[180px] opacity-10" />
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid lg:grid-cols-12 gap-20">
+            <div className="lg:col-span-5">
+              <span className="text-electric-blue text-[11px] font-black uppercase tracking-[0.4em] mb-6 block">Contatto Diretto</span>
+              <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none mb-12">
+                Pianifica la Tua <span className="text-electric-blue">Strategia</span>
+              </h2>
+              <p className="text-zinc-400 text-lg mb-12 max-w-md">
+                Scegli un momento per una discovery call gratuita. Analizzeremo insieme il tuo business e i tuoi obiettivi digitali.
+              </p>
+              
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-electric-blue">
+                    <Mail size={20} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Email</div>
+                    <div className="font-bold">{CONFIG.email}</div>
+                  </div>
                 </div>
-              </a>
-              <div className="flex gap-6">
-                 <a href={CONFIG.social.linkedin} target="_blank" className="flex-1 p-8 bg-zinc-50 rounded-[32px] flex flex-col items-center gap-3 hover:bg-zinc-100 transition-colors">
-                    <Linkedin size={24} className="text-electric-blue" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">LinkedIn</span>
-                 </a>
-                 <a href={CONFIG.social.instagram} target="_blank" className="flex-1 p-8 bg-zinc-50 rounded-[32px] flex flex-col items-center gap-3 hover:bg-zinc-100 transition-colors">
-                    <Instagram size={24} className="text-electric-blue" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">Instagram</span>
-                 </a>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-electric-blue">
+                    <Linkedin size={20} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Linkedin</div>
+                    <div className="font-bold">giacomodiara</div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="bg-zinc-50 p-12 rounded-[50px]">
-            <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
-               <div className="space-y-3">
-                 <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-4">Nome</label>
-                 <input type="text" placeholder="Giacomo Rossi" className="w-full bg-white border-0 rounded-2xl px-6 py-5 focus:ring-4 focus:ring-blue-50 outline-none transition-all font-medium" />
-               </div>
-               <div className="space-y-3">
-                 <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-4">Email</label>
-                 <input type="email" placeholder="mail@esempio.it" className="w-full bg-white border-0 rounded-2xl px-6 py-5 focus:ring-4 focus:ring-blue-50 outline-none transition-all font-medium" />
-               </div>
-               <div className="space-y-3">
-                 <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-4">Messaggio</label>
-                 <textarea rows={4} placeholder="Parlami del tuo progetto..." className="w-full bg-white border-0 rounded-2xl px-6 py-5 focus:ring-4 focus:ring-blue-50 outline-none transition-all font-medium resize-none" />
-               </div>
-               <button className="w-full bg-zinc-950 text-white font-black py-6 rounded-2xl uppercase tracking-widest text-[11px] hover:bg-electric-blue transition-all shadow-xl">Invia Messaggio</button>
-            </form>
+
+            <div className="lg:col-span-7 text-zinc-900">
+              <BookingCalendar />
+            </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-20 px-6 border-t border-zinc-100 text-center">
-        <div className="max-w-7xl mx-auto flex flex-col items-center gap-12">
-          <div className="text-2xl font-black tracking-tighter uppercase">GIACOMO<span className="text-electric-blue">DIARA</span></div>
-          <div className="flex gap-10 text-[10px] font-black uppercase tracking-widest text-zinc-400">
-             {NAV_ITEMS.map(i => <a key={i.label} href={i.href} className="hover:text-electric-blue transition-colors">{i.label}</a>)}
+      <footer className="py-12 bg-white border-t border-zinc-100">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="text-2xl font-black italic tracking-tighter uppercase">
+            GD<span className="text-electric-blue">.</span>
           </div>
-          <div className="text-zinc-300 text-[10px] font-black uppercase tracking-[0.5em]">© {new Date().getFullYear()} ALL RIGHTS RESERVED</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+            © 2024 Giacomo Diara. Tutti i diritti riservati.
+          </div>
+          <div className="flex gap-6">
+            <a href={CONFIG.social.instagram} className="text-zinc-400 hover:text-electric-blue transition-colors"><Instagram size={20} /></a>
+            <a href={CONFIG.social.linkedin} className="text-zinc-400 hover:text-electric-blue transition-colors"><Linkedin size={20} /></a>
+            <a href={`mailto:${CONFIG.email}`} className="text-zinc-400 hover:text-electric-blue transition-colors"><Mail size={20} /></a>
+          </div>
         </div>
       </footer>
     </div>
   );
 };
 
-const container = document.getElementById('root');
-if (container) {
-  const root = createRoot(container);
-  root.render(<App />);
-}
+const root = createRoot(document.getElementById('root')!);
+root.render(<App />);
