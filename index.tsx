@@ -15,7 +15,10 @@ import {
   Video,
   Globe,
   User,
-  Activity
+  Activity,
+  Target,
+  TrendingUp,
+  Layers
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
@@ -32,10 +35,11 @@ const CONFIG = {
 };
 
 const NAV_ITEMS = [
+  { label: 'Introduzione', href: '#introduzione' },
   { label: 'Servizi', href: '#servizi' },
-  { label: 'Chi Sono', href: '#chi-sono' },
-  { label: 'Portfolio', href: '#portfolio' },
-  { label: 'Contatti', href: '#contatti' },
+  { label: 'I miei ultimi lavori', href: '#portfolio' },
+  { label: 'Collabora con me', href: '#contatti' },
+  { label: 'Scrivimi un email', href: `mailto:${CONFIG.email}` },
 ];
 
 const SERVICES = [
@@ -145,7 +149,13 @@ const Navbar = ({ onToggleAI, aiActive, isLive }: any) => {
         <div className="hidden md:flex items-center gap-10">
           <div className="flex gap-8 text-[10px] font-black uppercase tracking-widest text-zinc-400">
             {NAV_ITEMS.map((item) => (
-              <a key={item.label} href={item.href} className="hover:text-electric-blue transition-colors">{item.label}</a>
+              <a 
+                key={item.label} 
+                href={item.href} 
+                className="hover:text-electric-blue transition-colors whitespace-nowrap"
+              >
+                {item.label}
+              </a>
             ))}
           </div>
           <button 
@@ -323,6 +333,58 @@ const App = () => {
             <a href="#contatti" className="bg-white border-2 border-zinc-100 px-12 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-electric-blue transition-all">Contatti</a>
           </div>
         </motion.div>
+      </section>
+
+      {/* Description Section (Manifesto) */}
+      <section id="introduzione" className="py-32 px-6 bg-white scroll-mt-24">
+        <div className="max-w-4xl mx-auto">
+          <SectionHeading subtitle="Manifesto Digitale" title="Visione & Metodo" />
+          <div className="space-y-8 text-lg md:text-xl text-zinc-600 leading-relaxed font-medium italic">
+            <p>
+              Sono <strong className="text-zinc-900 font-black not-italic">Giacomo Diara</strong>, Social Media Manager Junior specializzato nel supportare professionisti e piccole imprese che desiderano trasformare la propria presenza online in uno strumento concreto di crescita.
+            </p>
+            <p>
+              Credo che essere sui social non significhi semplicemente “esserci”, ma comunicare con intenzione, metodo e obiettivi chiari. Per questo progetto strategie personalizzate che aiutano i brand ad aumentare la propria visibilità, intercettare il pubblico giusto e costruire un posizionamento autorevole nel tempo.
+            </p>
+            <p>
+              Ogni contenuto nasce da un’analisi strategica: nulla è lasciato al caso. L’obiettivo non è pubblicare di più, ma comunicare meglio — con coerenza, valore e direzione.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mt-20">
+            {[
+              { icon: <Target className="text-electric-blue" />, label: "Strategia", desc: "Analisi mirata per obiettivi chiari." },
+              { icon: <Layers className="text-electric-blue" />, label: "Posizionamento", desc: "Costruire autorevolezza nel tempo." },
+              { icon: <TrendingUp className="text-electric-blue" />, label: "Crescita", desc: "Risultati misurabili e costanti." }
+            ].map((pillar, i) => (
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, y: 20 }} 
+                whileInView={{ opacity: 1, y: 0 }} 
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="p-8 bg-zinc-50 rounded-3xl border border-zinc-100 group hover:border-electric-blue transition-all"
+              >
+                <div className="mb-4">{pillar.icon}</div>
+                <h4 className="text-xl font-black italic uppercase tracking-tight mb-2">{pillar.label}</h4>
+                <p className="text-sm text-zinc-500 leading-relaxed">{pillar.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="mt-20 space-y-8 text-lg md:text-xl text-zinc-600 leading-relaxed font-medium italic">
+            <p>
+              Affianco i miei clienti in un percorso strutturato, orientato a trasformare l’audience in opportunità concrete di business.
+            </p>
+            <div className="p-10 bg-zinc-950 text-white rounded-[40px] shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-electric-blue/10 blur-3xl rounded-full" />
+              <p className="relative z-10 text-2xl md:text-3xl font-black uppercase tracking-tighter leading-tight italic">
+                "Perché i social media, se utilizzati correttamente, <br />
+                <span className="text-electric-blue">non sono un costo: sono un investimento.</span>"
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Services Section */}
