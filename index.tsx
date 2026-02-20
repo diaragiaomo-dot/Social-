@@ -45,6 +45,7 @@ const CONFIG = {
 
 const NAV_ITEMS = [
   { label: 'Introduzione', href: '#hero' },
+  { label: 'Biografia', href: '#biografia' },
   { label: 'Servizi', href: '#servizi' },
   { label: 'I miei progetti', href: '#portfolio' },
   { label: 'Collabora con me', href: '#collabora' },
@@ -102,11 +103,21 @@ const COLLABORATION_STEPS = [
 ];
 
 const FRIENDS = [
-  { name: "Andrea", role: "Creative Director", image: "https://picsum.photos/seed/friend1/200/200" },
-  { name: "Sofia", role: "Social Strategist", image: "https://picsum.photos/seed/friend2/200/200" },
-  { name: "Matteo", role: "Video Editor", image: "https://picsum.photos/seed/friend3/200/200" },
-  { name: "Giulia", role: "Web Designer", image: "https://picsum.photos/seed/friend4/200/200" },
+  { name: "Andrea", role: "Creative Director" },
+  { name: "Sofia", role: "Social Strategist" },
+  { name: "Matteo", role: "Video Editor" },
+  { name: "Giulia", role: "Web Designer" },
 ];
+
+const BIOGRAPHY = {
+  text: "Sono un Digital Strategist e Social Media Manager Junior con la passione per la creazione di ecosistemi digitali che non solo appaiono belli, ma performano. Il mio percorso è iniziato dalla curiosità per il comportamento degli utenti online, evolvendosi in una missione: aiutare brand e professionisti a scalare la loro presenza attraverso strategie basate sui dati e creatività audace.",
+  stats: [
+    { label: "Anni di Esperienza", value: "2+" },
+    { label: "Progetti Completati", value: "50+" },
+    { label: "Clienti Soddisfatti", value: "30+" },
+    { label: "Caffè Consumati", value: "∞" }
+  ]
+};
 
 const GIACOMO_CONTEXT = `
 Sei il "Gemello Digitale" di Giacomo Diara. Giacomo è un esperto in SMM, Web Design e Video Editing.
@@ -538,6 +549,53 @@ const App = () => {
           </div>
         </div>
       </section>
+      
+      {/* Biography */}
+      <section id="biografia" className="py-32 border-y border-zinc-100">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-20 items-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="relative"
+            >
+              <div className="aspect-square bg-zinc-100 rounded-3xl flex items-center justify-center border border-zinc-200 relative z-10">
+                <User size={120} className="text-zinc-200" />
+              </div>
+              <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-electric-blue rounded-full blur-[120px] opacity-10 -z-10" />
+              <div className="absolute -top-10 -right-10 w-40 h-40 border-2 border-electric-blue/20 rounded-full -z-10" />
+            </motion.div>
+
+            <div>
+              <SectionHeading subtitle="Chi Sono" title="Dietro la Strategia" />
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-xl text-zinc-500 font-medium leading-relaxed mb-12"
+              >
+                {BIOGRAPHY.text}
+              </motion.p>
+              
+              <div className="grid grid-cols-2 gap-8">
+                {BIOGRAPHY.stats.map((stat, idx) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
+                    <div className="text-4xl font-black italic tracking-tighter text-electric-blue mb-2">{stat.value}</div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{stat.label}</div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Services */}
       <section id="servizi" className="py-32 bg-zinc-50">
@@ -668,13 +726,8 @@ const App = () => {
                 className="text-center group"
               >
                 <div className="relative mb-6 inline-block">
-                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg group-hover:border-electric-blue transition-all duration-500">
-                    <img 
-                      src={friend.image} 
-                      alt={friend.name} 
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                      referrerPolicy="no-referrer"
-                    />
+                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center bg-zinc-100 border-4 border-white shadow-lg group-hover:border-electric-blue transition-all duration-500">
+                    <User size={48} className="text-zinc-300 group-hover:text-electric-blue transition-colors" />
                   </div>
                   <div className="absolute -bottom-2 -right-2 bg-white p-2 rounded-full shadow-md text-electric-blue opacity-0 group-hover:opacity-100 transition-opacity">
                     <Heart size={16} fill="currentColor" />
