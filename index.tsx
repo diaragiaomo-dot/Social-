@@ -25,7 +25,8 @@ import {
   Calendar as CalendarIcon,
   CheckCircle2,
   Phone,
-  ArrowRight
+  ArrowRight,
+  Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
@@ -44,7 +45,9 @@ const CONFIG = {
 const NAV_ITEMS = [
   { label: 'Introduzione', href: '#hero' },
   { label: 'Servizi', href: '#servizi' },
-  { label: 'Portfolio', href: '#portfolio' },
+  { label: 'I miei progetti', href: '#portfolio' },
+  { label: 'Collabora con me', href: '#collabora' },
+  { label: 'Recensioni', href: '#recensioni' },
   { label: 'Prenota', href: '#prenota' },
 ];
 
@@ -81,6 +84,19 @@ const PORTFOLIO = [
 
 const TIME_SLOTS = [
   "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"
+];
+
+const REVIEWS = [
+  { id: 1, name: "Marco Rossi", role: "CEO @ TechStart", text: "Giacomo ha trasformato la nostra presenza social in meno di 3 mesi. I risultati parlano da soli.", rating: 5 },
+  { id: 2, name: "Elena Bianchi", role: "Marketing Manager", text: "Professionista serio e creativo. Le sue landing page convertono davvero.", rating: 5 },
+  { id: 3, name: "Luca Verdi", role: "Content Creator", text: "Il montaggio video di Giacomo è di un altro livello. Dinamico e coinvolgente.", rating: 5 },
+];
+
+const COLLABORATION_STEPS = [
+  { title: "Discovery Call", desc: "Analizziamo il tuo brand e i tuoi obiettivi." },
+  { title: "Strategia", desc: "Definiamo un piano d'azione su misura." },
+  { title: "Esecuzione", desc: "Creazione contenuti e ottimizzazione." },
+  { title: "Scaling", desc: "Analisi dei dati e crescita costante." },
 ];
 
 const GIACOMO_CONTEXT = `
@@ -568,6 +584,59 @@ const App = () => {
                   <span className="text-[10px] font-black uppercase tracking-widest text-electric-blue mb-2 block">{item.category}</span>
                   <h4 className="text-xl font-black uppercase italic tracking-tighter mb-2">{item.title}</h4>
                   <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">{item.tech}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Collabora con me */}
+      <section id="collabora" className="py-32 bg-zinc-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <SectionHeading subtitle="Processo" title="Collabora con me" />
+          <div className="grid md:grid-cols-4 gap-8">
+            {COLLABORATION_STEPS.map((step, idx) => (
+              <motion.div 
+                key={step.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="relative p-8 bg-white rounded-3xl border border-zinc-100"
+              >
+                <div className="text-4xl font-black text-zinc-100 absolute top-4 right-8">0{idx + 1}</div>
+                <h3 className="text-xl font-black uppercase italic tracking-tighter mb-4 relative z-10">{step.title}</h3>
+                <p className="text-zinc-500 font-medium leading-relaxed relative z-10">{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Recensioni */}
+      <section id="recensioni" className="py-32">
+        <div className="max-w-7xl mx-auto px-6">
+          <SectionHeading subtitle="Testimonials" title="Cosa dicono di me" centered />
+          <div className="grid md:grid-cols-3 gap-8">
+            {REVIEWS.map((review, idx) => (
+              <motion.div 
+                key={review.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="p-10 bg-white border border-zinc-100 rounded-3xl shadow-sm hover:shadow-xl transition-all"
+              >
+                <div className="flex gap-1 mb-6">
+                  {[...Array(review.rating)].map((_, i) => (
+                    <Star key={i} size={16} className="fill-electric-blue text-electric-blue" />
+                  ))}
+                </div>
+                <p className="text-lg font-medium text-zinc-700 italic mb-8">"{review.text}"</p>
+                <div>
+                  <div className="font-black uppercase italic tracking-tighter">{review.name}</div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{review.role}</div>
                 </div>
               </motion.div>
             ))}
