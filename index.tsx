@@ -520,8 +520,8 @@ const App = () => {
 
       {/* Hero */}
       <section id="hero" className="relative pt-40 pb-20 md:pt-60 md:pb-40 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-12 gap-12 items-center">
-          <div className="md:col-span-8">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="max-w-4xl">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -548,69 +548,36 @@ const App = () => {
               </div>
             </motion.div>
           </div>
-          <div className="hidden md:block md:col-span-4 relative">
-             <motion.div 
-               animate={{ rotate: [0, 5, 0] }}
-               transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
-               className="aspect-[4/5] bg-zinc-100 border border-zinc-200 rounded-3xl overflow-hidden relative"
-             >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                <div className="absolute bottom-10 left-10 text-white">
-                  <div className="font-black italic uppercase tracking-tighter text-4xl">GD.</div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest opacity-80">Giacomo Diara</div>
-                </div>
-                {/* Placeholder image representation */}
-                <div className="w-full h-full flex items-center justify-center bg-zinc-50">
-                   <User size={120} className="text-zinc-200" />
-                </div>
-             </motion.div>
-             <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-electric-blue rounded-full blur-[100px] opacity-20" />
-          </div>
         </div>
       </section>
       
       {/* Biography */}
       <section id="biografia" className="py-32 border-y border-zinc-100">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-20 items-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+          <div className="max-w-4xl">
+            <SectionHeading subtitle="Chi Sono" title="Dietro la Strategia" />
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative"
+              className="text-2xl md:text-3xl text-zinc-800 font-medium leading-tight mb-16 italic"
             >
-              <div className="aspect-square bg-zinc-100 rounded-3xl flex items-center justify-center border border-zinc-200 relative z-10">
-                <User size={120} className="text-zinc-200" />
-              </div>
-              <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-electric-blue rounded-full blur-[120px] opacity-10 -z-10" />
-              <div className="absolute -top-10 -right-10 w-40 h-40 border-2 border-electric-blue/20 rounded-full -z-10" />
-            </motion.div>
-
-            <div>
-              <SectionHeading subtitle="Chi Sono" title="Dietro la Strategia" />
-              <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-xl text-zinc-500 font-medium leading-relaxed mb-12"
-              >
-                {BIOGRAPHY.text}
-              </motion.p>
-              
-              <div className="grid grid-cols-2 gap-8">
-                {BIOGRAPHY.stats.map((stat, idx) => (
-                  <motion.div
-                    key={stat.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: idx * 0.1 }}
-                  >
-                    <div className="text-4xl font-black italic tracking-tighter text-electric-blue mb-2">{stat.value}</div>
-                    <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{stat.label}</div>
-                  </motion.div>
-                ))}
-              </div>
+              {BIOGRAPHY.text}
+            </motion.p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+              {BIOGRAPHY.stats.map((stat, idx) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <div className="text-5xl font-black italic tracking-tighter text-electric-blue mb-2">{stat.value}</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{stat.label}</div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </div>
@@ -734,7 +701,7 @@ const App = () => {
       <section id="amici" className="py-32 bg-zinc-50">
         <div className="max-w-7xl mx-auto px-6">
           <SectionHeading subtitle="Network" title="Amici & Collaboratori" centered />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {FRIENDS.map((friend, idx) => (
               <motion.div 
                 key={friend.name}
@@ -742,17 +709,15 @@ const App = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                className="text-center group"
+                className="p-8 bg-white rounded-3xl border border-zinc-100 hover:border-electric-blue transition-all group"
               >
-                <div className="relative mb-6 inline-block">
-                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center bg-zinc-100 border-4 border-white shadow-lg group-hover:border-electric-blue transition-all duration-500">
-                    <User size={48} className="text-zinc-300 group-hover:text-electric-blue transition-colors" />
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 rounded-full bg-zinc-50 flex items-center justify-center text-zinc-300 group-hover:text-electric-blue transition-colors">
+                    <Heart size={18} />
                   </div>
-                  <div className="absolute -bottom-2 -right-2 bg-white p-2 rounded-full shadow-md text-electric-blue opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Heart size={16} fill="currentColor" />
-                  </div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-zinc-300">Partner</div>
                 </div>
-                <h4 className="text-xl font-black uppercase italic tracking-tighter">{friend.name}</h4>
+                <h4 className="text-2xl font-black uppercase italic tracking-tighter mb-1">{friend.name}</h4>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{friend.role}</p>
               </motion.div>
             ))}
