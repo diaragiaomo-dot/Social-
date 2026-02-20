@@ -26,7 +26,8 @@ import {
   CheckCircle2,
   Phone,
   ArrowRight,
-  Star
+  Star,
+  Heart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
@@ -48,6 +49,7 @@ const NAV_ITEMS = [
   { label: 'I miei progetti', href: '#portfolio' },
   { label: 'Collabora con me', href: '#collabora' },
   { label: 'Recensioni', href: '#recensioni' },
+  { label: 'Amici', href: '#amici' },
   { label: 'Prenota', href: '#prenota' },
 ];
 
@@ -97,6 +99,13 @@ const COLLABORATION_STEPS = [
   { title: "Strategia", desc: "Definiamo un piano d'azione su misura." },
   { title: "Esecuzione", desc: "Creazione contenuti e ottimizzazione." },
   { title: "Scaling", desc: "Analisi dei dati e crescita costante." },
+];
+
+const FRIENDS = [
+  { name: "Andrea", role: "Creative Director", image: "https://picsum.photos/seed/friend1/200/200" },
+  { name: "Sofia", role: "Social Strategist", image: "https://picsum.photos/seed/friend2/200/200" },
+  { name: "Matteo", role: "Video Editor", image: "https://picsum.photos/seed/friend3/200/200" },
+  { name: "Giulia", role: "Web Designer", image: "https://picsum.photos/seed/friend4/200/200" },
 ];
 
 const GIACOMO_CONTEXT = `
@@ -638,6 +647,41 @@ const App = () => {
                   <div className="font-black uppercase italic tracking-tighter">{review.name}</div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{review.role}</div>
                 </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Amici */}
+      <section id="amici" className="py-32 bg-zinc-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <SectionHeading subtitle="Network" title="Amici & Collaboratori" centered />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {FRIENDS.map((friend, idx) => (
+              <motion.div 
+                key={friend.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="text-center group"
+              >
+                <div className="relative mb-6 inline-block">
+                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg group-hover:border-electric-blue transition-all duration-500">
+                    <img 
+                      src={friend.image} 
+                      alt={friend.name} 
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 bg-white p-2 rounded-full shadow-md text-electric-blue opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Heart size={16} fill="currentColor" />
+                  </div>
+                </div>
+                <h4 className="text-xl font-black uppercase italic tracking-tighter">{friend.name}</h4>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{friend.role}</p>
               </motion.div>
             ))}
           </div>
